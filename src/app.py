@@ -25,7 +25,7 @@ from providers import get_llm_provider
 load_dotenv()
 
 # 5 test case đại diện: lý thuyết, 1 tool, 2 tools, 3 tools và edge case.
-BASELINE_TEST_IDS = (1, 4, 6, 7, 9)
+BASELINE_TEST_IDS = (2, 5, 8, 10, 11)
 
 
 def load_test_cases():
