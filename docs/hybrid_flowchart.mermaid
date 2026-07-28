@@ -1,28 +1,28 @@
 graph TD
-    A[👤 User Question / Yêu cầu từ Khách Hàng] --> B{🧠 Intent Classifier / Phân Loại Ý Định}
+    A["👤 User Question / Yêu cầu từ Khách Hàng"] --> B{"🧠 Intent Classifier / Phân Loại Ý Định"}
 
-    %% Nhánh 1: Chatbot Path (Câu hỏi đơn giản / Kiến thức chung)
-    B -- "🟢 Câu hỏi đơn giản / Kiến thức chung<br/>(Policy, FAQ, So sánh khái niệm)" --> C[🤖 Chatbot Baseline Path]
-    C --> C1[Direct Prompt LLM Generation]
-    C1 --> C2[💬 Trả về câu trả lời trực tiếp<br/>(Nhanh, Rẻ, không gọi Tool)]
+    %% Nhánh 1: Chatbot Path
+    B -- "🟢 Câu hỏi đơn giản / Kiến thức chung" --> C["🤖 Chatbot Baseline Path"]
+    C --> C1["Direct Prompt LLM Generation"]
+    C1 --> C2["💬 Trả về câu trả lời trực tiếp - Nhanh Rẻ không gọi Tool"]
 
-    %% Nhánh 2: ReAct Agent Path (Câu hỏi phức tạp / Cần thao tác dữ liệu thật)
-    B -- "🟡/🔴 Cần dữ liệu thực tế / Thao tác hệ thống<br/>(Tra đơn, Kiểm tra chính sách, Tạo đổi trả)" --> D[🧠 ReAct Agent Path]
-    D --> E[Thought: Suy luận bước tiếp theo]
-    E --> F{Cần gọi Tool nào?}
+    %% Nhánh 2: ReAct Agent Path
+    B -- "🟡/🔴 Cần dữ liệu thực tế / Thao tác hệ thống" --> D["🧠 ReAct Agent Path"]
+    D --> E["Thought: Suy luận bước tiếp theo"]
+    E --> F{"Cần gọi Tool nào?"}
 
     F -- "1. Tra cứu đơn hàng" --> G1["lookup_order(order_id, phone)"]
     F -- "2. Kiểm tra điều kiện" --> G2["check_return_policy(order_id, item_id)"]
     F -- "3. Tạo yêu cầu" --> G3["create_return_request(order_id, item_id, reason)"]
     F -- "4. Trạng thái vận chuyển" --> G4["get_shipping_status(return_id)"]
 
-    G1 --> H[👁️ Observation: Nhận kết quả từ Tool/DB]
+    G1 --> H["👁️ Observation: Nhận kết quả từ Tool/DB"]
     G2 --> H
     G3 --> H
     G4 --> H
 
-    H --> I{🛡️ Kiểm tra Guardrails & Kết quả Observation}
+    H --> I{"🛡️ Kiểm tra Guardrails & Kết quả Observation"}
 
     I -- "Tiếp tục suy luận" --> E
-    I -- "✅ Hoàn thành đủ dữ liệu" --> J[Final Answer: Phản hồi kết quả cho Khách Hàng]
-    I -- "🛑 Vi phạm Guardrail / Lỗi an toàn<br/>(Over MAX_ITERATIONS, Thiếu SĐT, Quá hạn)" --> K[🛡️ Safe Fallback / Chuyển Tổng Đài Viên]
+    I -- "✅ Hoàn thành đủ dữ liệu" --> J["Final Answer: Phản hồi kết quả cho Khách Hàng"]
+    I -- "🛑 Vi phạm Guardrail / Lỗi an toàn" --> K["🛡️ Safe Fallback / Chuyển Tổng Đài Viên"]
