@@ -1,11 +1,12 @@
 """
-🔌 MULTI-PROVIDER LLM ADAPTER (OpenAI, Gemini, Anthropic, OpenRouter & Offline Mock)
+🔌 MULTI-PROVIDER LLM ADAPTER
+(OpenAI, Gemini, Anthropic, OpenRouter, NVIDIA NIM & Offline Mock)
 Hỗ trợ chuyển đổi linh hoạt giữa các nhà cung cấp AI chỉ bằng cách đổi biến môi trường LLM_PROVIDER.
 """
 
 import os
 import sys
-import json
+import time
 import requests
 from dotenv import load_dotenv
 
@@ -131,6 +132,88 @@ class OpenRouterProvider(BaseLLMProvider):
             return f"[OpenRouter Exception]: {str(e)}"
 
 
+class NvidiaProvider(BaseLLMProvider):
+    """NVIDIA NIM Provider sử dụng API Chat Completions."""
+
+    INVOKE_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+    RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+    MAX_RETRIES = 2
+
+    def __init__(self, api_key: str = None, model: str = None):
+        self.api_key = api_key or os.getenv("NVIDIA_API_KEY")
+        self.model_name = (
+            model
+            or os.getenv("LLM_MODEL")
+            or "google/gemma-4-31b-it"
+        )
+
+    def generate(self, prompt: str, system_prompt: str = "") -> str:
+        if not self.api_key or self.api_key == "your_nvidia_api_key_here":
+            return "[NVIDIA Error]: Chưa cấu hình NVIDIA_API_KEY trong file .env!"
+
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "chat_template_kwargs": {
+                "enable_thinking": True,
+            },
+            "max_tokens": 16384,
+            "stream": False,
+            "temperature": 0.7,
+            "top_p": 0.95,
+        }
+
+        for attempt in range(self.MAX_RETRIES + 1):
+            try:
+                response = requests.post(
+                    self.INVOKE_URL,
+                    headers=headers,
+                    json=payload,
+                    timeout=120,
+                )
+            except requests.RequestException as exc:
+                if attempt < self.MAX_RETRIES:
+                    time.sleep(2 ** attempt)
+                    continue
+                return f"[NVIDIA Request Exception]: {str(exc)}"
+
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    return data["choices"][0]["message"]["content"]
+                except (KeyError, IndexError, TypeError, ValueError) as exc:
+                    return (
+                        "[NVIDIA Response Error]: "
+                        f"Phản hồi không hợp lệ: {str(exc)}"
+                    )
+
+            should_retry = (
+                response.status_code in self.RETRYABLE_STATUS_CODES
+                and attempt < self.MAX_RETRIES
+            )
+            if should_retry:
+                time.sleep(2 ** attempt)
+                continue
+
+            error_body = response.text[:1000]
+            return (
+                f"[NVIDIA API Error {response.status_code}]: "
+                f"{error_body}"
+            )
+
+        return "[NVIDIA Error]: Đã hết số lần thử lại."
+
+
 class MockProvider(BaseLLMProvider):
     """Offline Mock Provider (Cho bài test không cần kết nối API)"""
     def generate(self, prompt: str, system_prompt: str = "") -> str:
@@ -152,6 +235,8 @@ def get_llm_provider(provider_name: str = None) -> BaseLLMProvider:
         return AnthropicProvider()
     elif name == "openrouter":
         return OpenRouterProvider()
+    elif name == "nvidia":
+        return NvidiaProvider()
     else:
         return MockProvider()
 
