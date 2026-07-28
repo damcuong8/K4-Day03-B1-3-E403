@@ -91,43 +91,7 @@
 
 ---
 
-## 🔍 3. SO SÁNH PHẢN HỒI (DEMO MỐC 3 — HAPPY PATH)
-
-**Câu hỏi**: *"Tôi muốn hoàn tiền đơn ORD-002 cho sản phẩm ITM-B vì tai
-nghe bị hỏng. Số điện thoại xác minh của tôi là 0912345678. Hãy kiểm tra
-điều kiện và tạo yêu cầu đổi trả."*
-
-### 🤖 Chatbot Baseline:
-
-* **Phản hồi**: *"Tôi không có quyền truy cập hệ thống đơn hàng nên không
-  thể kiểm tra đơn ORD-002. Vui lòng liên hệ bộ phận CSKH."*
-* **Nhận xét**: An toàn nhưng không thể kiểm tra dữ liệu hoặc thực hiện đổi
-  trả vì Baseline không được gọi tool.
-
-### 🧠 ReAct Agent:
-
-* **Thought 1**: Cần tra cứu thông tin đơn và xác minh chủ sở hữu.
-* **Action 1**: `lookup_order["ORD-002", "0912345678"]`
-* **Observation 1**: `Đơn ORD-002: Tai nghe Bluetooth XYZ (ID: ITM-B,
-  giá 450,000đ), ngày giao 2026-07-26, trạng thái: Đã giao.`
-* **Thought 2**: Đã xác minh đơn, cần kiểm tra điều kiện đổi trả.
-* **Action 2**: `check_return_policy["ORD-002", "ITM-B"]`
-* **Observation 2**: `ELIGIBLE: Danh mục "electronics", trong hạn 7 ngày,
-  sản phẩm ĐỦ ĐIỀU KIỆN đổi trả.`
-* **Thought 3**: Sản phẩm đủ điều kiện, có thể tạo yêu cầu.
-* **Action 3**:
-  `create_return_request["ORD-002", "ITM-B", "tai nghe bị hỏng"]`
-* **Observation 3**: `Yêu cầu đổi trả RET-0058 đã được tạo. Hoàn tiền dự
-  kiến: 450,000đ. Vui lòng gửi sản phẩm về kho trong 5 ngày.`
-* **Final Answer**: *"Yêu cầu đổi trả cho sản phẩm Tai nghe Bluetooth XYZ
-  (ITM-B) trong đơn ORD-002 đã được tạo thành công với mã RET-0058. Số
-  tiền hoàn dự kiến là 450,000đ. Vui lòng gửi sản phẩm trong vòng 5 ngày."*
-* **Nhận xét**: NVIDIA Gemma hoàn thành đúng chuỗi cần thiết trong 4 LLM
-  calls và 3 tool calls; không gọi tool thừa và không kích hoạt guardrail.
-
----
-
-## 🔬 5. NHẬT KÝ THỰC THI REACT TRACE & KIỂM THỬ GUARDRAIL (MỐC 3 - ROLE 1 & ROLE 5)
+## 🔬 3. NHẬT KÝ THỰC THI REACT TRACE & KIỂM THỬ GUARDRAIL (MỐC 3 - ROLE 1 & ROLE 5)
 
 > **Provider:** OpenRouterProvider — Model: `google/gemma-4-26b-a4b-it:free`
 > **Role 1 (Test Architect):** Chuẩn bị bộ test case Happy Path (chuỗi 3 Tool) & Edge Cases bẫy guardrail (quá hạn, thiếu SĐT xác minh).
