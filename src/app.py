@@ -35,7 +35,7 @@ from tools import AVAILABLE_TOOLS
 
 load_dotenv()
 
-# 5 test case đại diện: lý thuyết, 1 tool, 2 tools, 3 tools và edge case.
+# Bộ 5 test case Mốc 2 đã được Role 5 ghi nhận trong trace_eval.md.
 BASELINE_TEST_IDS = (2, 5, 8, 10, 11)
 
 # Câu demo có đủ dữ liệu xác minh để Agent chạy trọn chuỗi 3 tools.
